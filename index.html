@@ -2,173 +2,19 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Snake God Mode</title>
+<title>Web của Tao</title>
 <style>
-  body {
-    margin: 0;
-    background: #111;
-    color: white;
-    font-family: Arial;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  canvas {
-    background: black;
-    margin-top: 10px;
-  }
-
-  .panel {
-    margin-top: 10px;
-    width: 300px;
-  }
-
-  input[type=range] {
-    width: 100%;
-  }
-
-  .controls {
-    margin-top: 15px;
-    display: grid;
-    grid-template-columns: 60px 60px 60px;
-    grid-template-rows: 60px 60px;
-    gap: 10px;
-  }
-
-  button {
-    background: #00ffcc;
-    font-size: 24px;
-    font-weight: bold;
-    border: none;
-    border-radius: 12px;
-  }
-
-  .up { grid-column: 2; }
-  .left { grid-column: 1; grid-row: 2; }
-  .down { grid-column: 2; grid-row: 2; }
-  .right { grid-column: 3; grid-row: 2; }
+body {
+  background: #111;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+  padding-top: 50px;
+}
 </style>
 </head>
 <body>
-
-<h2>🐍 Snake God Mode</h2>
-
-<canvas id="game" width="300" height="300"></canvas>
-
-<div class="panel">
-  <div>🍎 Food: <span id="foodCount">10</span></div>
-  <input id="slider" type="range" min="1" max="1000" value="10">
-</div>
-
-<div class="controls">
-  <button class="up" onclick="setDir(0,-1)">↑</button>
-  <button class="left" onclick="setDir(-1,0)">←</button>
-  <button class="down" onclick="setDir(0,1)">↓</button>
-  <button class="right" onclick="setDir(1,0)">→</button>
-</div>
-
-<script>
-  const canvas = document.getElementById("game");
-  const ctx = canvas.getContext("2d");
-
-  const size = 15;
-  const count = canvas.width / size;
-
-  let snake, foods, dx, dy, score;
-
-  function spawnFood() {
-    return {
-      x: Math.floor(Math.random() * count),
-      y: Math.floor(Math.random() * count)
-    };
-  }
-
-  function reset(foodAmount) {
-    snake = [{x: 10, y: 10}];
-    foods = [];
-    for (let i = 0; i < foodAmount; i++) {
-      foods.push(spawnFood());
-    }
-    dx = 1;
-    dy = 0;
-    score = 0;
-  }
-
-  function setDir(x, y) {
-    if (dx === -x && dy === -y) return;
-    dx = x;
-    dy = y;
-  }
-
-  document.addEventListener("keydown", e => {
-    if (e.key === "ArrowUp") setDir(0,-1);
-    if (e.key === "ArrowDown") setDir(0,1);
-    if (e.key === "ArrowLeft") setDir(-1,0);
-    if (e.key === "ArrowRight") setDir(1,0);
-  });
-
-  const slider = document.getElementById("slider");
-  const foodText = document.getElementById("foodCount");
-
-  slider.oninput = () => {
-    foodText.textContent = slider.value;
-    reset(+slider.value);
-  };
-
-  function update() {
-    const head = {
-      x: snake[0].x + dx,
-      y: snake[0].y + dy
-    };
-
-    // 🌍 MAP VÔ HẠN (wrap)
-    if (head.x < 0) head.x = count - 1;
-    if (head.y < 0) head.y = count - 1;
-    if (head.x >= count) head.x = 0;
-    if (head.y >= count) head.y = 0;
-
-    snake.unshift(head);
-
-    // 🐍 BẤT TỬ: KHÔNG CHẾT KHI TỰ CẮN
-    // chỉ cắt đuôi nếu không ăn
-
-    let ate = false;
-    for (let i = 0; i < foods.length; i++) {
-      if (head.x === foods[i].x && head.y === foods[i].y) {
-        score++;
-        foods[i] = spawnFood();
-        ate = true;
-        break;
-      }
-    }
-
-    if (!ate) snake.pop();
-  }
-
-  function draw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    ctx.fillStyle = "lime";
-    snake.forEach(s =>
-      ctx.fillRect(s.x * size, s.y * size, size-1, size-1)
-    );
-
-    ctx.fillStyle = "red";
-    foods.forEach(f =>
-      ctx.fillRect(f.x * size, f.y * size, size-1, size-1)
-    );
-
-    ctx.fillStyle = "white";
-    ctx.fillText("Score: " + score, 10, 12);
-  }
-
-  reset(slider.value);
-  setInterval(() => {
-    update();
-    draw();
-  }, 100);
-</script>
-
+<h1>Chuột 🐭 tại đây!</h1>
+<p>Web demo chạy trên GitHub Pages</p>
 </body>
 </html>
