@@ -1,20 +1,95 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-<meta charset="utf-8">
-<title>Web của Tao</title>
+<meta charset="UTF-8">
+<title>RBX Asset → Image</title>
 <style>
-body {
-  background: #111;
-  color: white;
-  font-family: Arial;
-  text-align: center;
-  padding-top: 50px;
-}
+  body {
+    background: #0f0f0f;
+    color: white;
+    font-family: Arial;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .box {
+    background: #1a1a1a;
+    padding: 24px;
+    border-radius: 16px;
+    width: 320px;
+    text-align: center;
+  }
+
+  input {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 12px;
+  }
+
+  button {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 12px;
+    border: none;
+    background: #00ffcc;
+    cursor: pointer;
+  }
+
+  img {
+    margin-top: 16px;
+    width: 100%;
+    border-radius: 12px;
+    display: none;
+  }
+
+  .link {
+    margin-top: 10px;
+    font-size: 12px;
+    word-break: break-all;
+    color: #00ffcc;
+  }
 </style>
 </head>
 <body>
-<h1>Chuột 🐭 tại đây!</h1>
-<p>Web demo chạy trên GitHub Pages</p>
+
+<div class="box">
+  <h2>RBX Asset → Image</h2>
+  <input id="asset" placeholder="rbxassetid://123 hoặc ID">
+  <button onclick="convert()">CONVERT</button>
+  <img id="img">
+  <div id="link" class="link"></div>
+</div>
+
+<script>
+function convert() {
+  let val = document.getElementById("asset").value.trim();
+  if (!val) return;
+
+  let id = val.replace("rbxassetid://", "");
+  let api = `https://thumbnails.roblox.com/v1/assets?assetIds=${id}&size=420x420&format=Png`;
+
+  fetch(api)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.data || !d.data[0] || !d.data[0].imageUrl) {
+        alert("Không lấy được ảnh");
+        return;
+      }
+      let imgUrl = d.data[0].imageUrl;
+      let img = document.getElementById("img");
+      img.src = imgUrl;
+      img.style.display = "block";
+      document.getElementById("link").innerText = imgUrl;
+    });
+}
+</script>
+
 </body>
 </html>
