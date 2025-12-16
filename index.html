@@ -18,7 +18,7 @@
     background: #1a1a1a;
     padding: 24px;
     border-radius: 16px;
-    width: 320px;
+    width: 340px;
     text-align: center;
   }
 
@@ -55,6 +55,12 @@
     word-break: break-all;
     color: #00ffcc;
   }
+
+  .status {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #ffcc00;
+  }
 </style>
 </head>
 <body>
@@ -63,31 +69,55 @@
   <h2>RBX Asset → Image</h2>
   <input id="asset" placeholder="rbxassetid://123 hoặc ID">
   <button onclick="convert()">CONVERT</button>
+  <div id="status" class="status"></div>
   <img id="img">
   <div id="link" class="link"></div>
 </div>
 
 <script>
-function convert() {
-  let val = document.getElementById("asset").value.trim();
-  if (!val) return;
+async function convert() {
+  const input = document.getElementById("asset").value.trim();
+  if (!input) return;
 
-  let id = val.replace("rbxassetid://", "");
-  let api = `https://thumbnails.roblox.com/v1/assets?assetIds=${id}&size=420x420&format=Png`;
+  const id = input.replace("rbxassetid://", "");
+  const status = document.getElementById("status");
+  const img = document.getElementById("img");
+  const link = document.getElementById("link");
 
-  fetch(api)
-    .then(r => r.json())
-    .then(d => {
-      if (!d.data || !d.data[0] || !d.data[0].imageUrl) {
-        alert("Không lấy được ảnh");
-        return;
-      }
-      let imgUrl = d.data[0].imageUrl;
-      let img = document.getElementById("img");
-      img.src = imgUrl;
-      img.style.display = "block";
-      document.getElementById("link").innerText = imgUrl;
-    });
+  status.innerText = "⏳ Đang kiểm tra asset...";
+  img.style.display = "none";
+  link.innerText = "";
+
+  try {
+    const api = `https://thumbnails.roblox.com/v1/assets?assetIds=${id}&size=420x420&format=Png`;
+    const res = await fetch(api);
+    const json = await res.json();
+
+    if (!json.data || !json.data[0]) {
+      status.innerText = "❌ Không tìm thấy asset";
+      return;
+    }
+
+    const data = json.data[0];
+
+    if (data.state === "Pending") {
+      status.innerText = "⏳ Asset đang Pending, thử lại sau";
+      return;
+    }
+
+    if (data.state !== "Completed" || !data.imageUrl) {
+      status.innerText = "❌ Asset bị Blocked hoặc không phải ảnh";
+      return;
+    }
+
+    img.src = data.imageUrl;
+    img.style.display = "block";
+    link.innerText = data.imageUrl;
+    status.innerText = "✅ Thành công";
+
+  } catch (e) {
+    status.innerText = "❌ Lỗi khi gọi API";
+  }
 }
 </script>
 
