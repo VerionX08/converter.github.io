@@ -1,80 +1,7 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<title>RBX Asset → Image</title>
-<style>
-  body {
-    background: #0f0f0f;
-    color: white;
-    font-family: Arial;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-
-  .box {
-    background: #1a1a1a;
-    padding: 24px;
-    border-radius: 16px;
-    width: 340px;
-    text-align: center;
-  }
-
-  input {
-    width: 100%;
-    padding: 14px;
-    font-size: 16px;
-    border-radius: 10px;
-    border: none;
-    margin-bottom: 12px;
-  }
-
-  button {
-    width: 100%;
-    padding: 16px;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 12px;
-    border: none;
-    background: #00ffcc;
-    cursor: pointer;
-  }
-
-  img {
-    margin-top: 16px;
-    width: 100%;
-    border-radius: 12px;
-    display: none;
-  }
-
-  .link {
-    margin-top: 10px;
-    font-size: 12px;
-    word-break: break-all;
-    color: #00ffcc;
-  }
-
-  .status {
-    margin-top: 10px;
-    font-size: 14px;
-    color: #ffcc00;
-  }
-</style>
-</head>
-<body>
-
-<div class="box">
-  <h2>RBX Asset → Image</h2>
-  <input id="asset" placeholder="rbxassetid://123 hoặc ID">
-  <button onclick="convert()">CONVERT</button>
-  <div id="status" class="status"></div>
-  <img id="img">
-  <div id="link" class="link"></div>
-</div>
-
 <script>
+let retryCount = 0;
+const MAX_RETRY = 10;
+
 async function convert() {
   const input = document.getElementById("asset").value.trim();
   if (!input) return;
@@ -84,42 +11,53 @@ async function convert() {
   const img = document.getElementById("img");
   const link = document.getElementById("link");
 
-  status.innerText = "⏳ Đang kiểm tra asset...";
+  retryCount = 0;
   img.style.display = "none";
   link.innerText = "";
 
-  try {
-    const api = `https://thumbnails.roblox.com/v1/assets?assetIds=${id}&size=420x420&format=Png`;
-    const res = await fetch(api);
-    const json = await res.json();
+  checkAsset(id);
 
-    if (!json.data || !json.data[0]) {
-      status.innerText = "❌ Không tìm thấy asset";
-      return;
+  async function checkAsset(assetId) {
+    try {
+      status.innerText = `🔎 Đang kiểm tra asset (${retryCount}/${MAX_RETRY})`;
+
+      const api = `https://thumbnails.roblox.com/v1/assets?assetIds=${assetId}&size=420x420&format=Png`;
+      const res = await fetch(api);
+      const json = await res.json();
+
+      if (!json.data || !json.data[0]) {
+        status.innerText = "❌ Không tìm thấy asset";
+        return;
+      }
+
+      const data = json.data[0];
+
+      // ⏳ Pending → retry
+      if (data.state === "Pending") {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          status.innerText = "⏰ Pending quá lâu, thử lại sau";
+          return;
+        }
+        setTimeout(() => checkAsset(assetId), 2000);
+        return;
+      }
+
+      // ❌ Blocked / lỗi
+      if (data.state !== "Completed" || !data.imageUrl) {
+        status.innerText = `❌ Asset không khả dụng (${data.state})`;
+        return;
+      }
+
+      // ✅ Thành công
+      img.src = data.imageUrl;
+      img.style.display = "block";
+      link.innerText = data.imageUrl;
+      status.innerText = "✅ Asset sẵn sàng";
+
+    } catch (e) {
+      status.innerText = "❌ Lỗi khi gọi API";
     }
-
-    const data = json.data[0];
-
-    if (data.state === "Pending") {
-      status.innerText = "⏳ Asset đang Pending, thử lại sau";
-      return;
-    }
-
-    if (data.state !== "Completed" || !data.imageUrl) {
-      status.innerText = "❌ Asset bị Blocked hoặc không phải ảnh";
-      return;
-    }
-
-    img.src = data.imageUrl;
-    img.style.display = "block";
-    link.innerText = data.imageUrl;
-    status.innerText = "✅ Thành công";
-
-  } catch (e) {
-    status.innerText = "❌ Lỗi khi gọi API";
   }
 }
 </script>
-
-</body>
-</html>
