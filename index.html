@@ -1,8 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>RBX Asset Checker</title>
+
+<style>
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #0f0f0f;
+    font-family: Arial;
+    color: white;
+  }
+
+  .box {
+    background: #1a1a1a;
+    padding: 24px;
+    border-radius: 16px;
+    width: 340px;
+    text-align: center;
+  }
+
+  input {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 12px;
+  }
+
+  button {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 12px;
+    border: none;
+    background: #00ffcc;
+    cursor: pointer;
+  }
+
+  .status {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #ffcc00;
+  }
+
+  img {
+    margin-top: 14px;
+    width: 100%;
+    border-radius: 12px;
+    display: none;
+  }
+
+  .link {
+    margin-top: 10px;
+    font-size: 12px;
+    word-break: break-all;
+    color: #00ffcc;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>RBX Asset → Image</h2>
+  <input id="asset" placeholder="rbxassetid://123 hoặc ID số">
+  <button onclick="convert()">CHECK</button>
+
+  <div id="status" class="status"></div>
+  <img id="img">
+  <div id="link" class="link"></div>
+</div>
+
 <script>
-let retryCount = 0;
+let retry = 0;
 const MAX_RETRY = 10;
 
-async function convert() {
+function convert() {
   const input = document.getElementById("asset").value.trim();
   if (!input) return;
 
@@ -11,53 +95,48 @@ async function convert() {
   const img = document.getElementById("img");
   const link = document.getElementById("link");
 
-  retryCount = 0;
+  retry = 0;
   img.style.display = "none";
   link.innerText = "";
 
-  checkAsset(id);
+  check(id);
 
-  async function checkAsset(assetId) {
-    try {
-      status.innerText = `🔎 Đang kiểm tra asset (${retryCount}/${MAX_RETRY})`;
+  async function check(assetId) {
+    status.innerText = `🔎 Đang kiểm tra (${retry}/${MAX_RETRY})`;
 
-      const api = `https://thumbnails.roblox.com/v1/assets?assetIds=${assetId}&size=420x420&format=Png`;
-      const res = await fetch(api);
-      const json = await res.json();
+    const api = `https://thumbnails.roblox.com/v1/assets?assetIds=${assetId}&size=420x420&format=Png`;
+    const res = await fetch(api);
+    const json = await res.json();
 
-      if (!json.data || !json.data[0]) {
-        status.innerText = "❌ Không tìm thấy asset";
-        return;
-      }
-
-      const data = json.data[0];
-
-      // ⏳ Pending → retry
-      if (data.state === "Pending") {
-        retryCount++;
-        if (retryCount >= MAX_RETRY) {
-          status.innerText = "⏰ Pending quá lâu, thử lại sau";
-          return;
-        }
-        setTimeout(() => checkAsset(assetId), 2000);
-        return;
-      }
-
-      // ❌ Blocked / lỗi
-      if (data.state !== "Completed" || !data.imageUrl) {
-        status.innerText = `❌ Asset không khả dụng (${data.state})`;
-        return;
-      }
-
-      // ✅ Thành công
-      img.src = data.imageUrl;
-      img.style.display = "block";
-      link.innerText = data.imageUrl;
-      status.innerText = "✅ Asset sẵn sàng";
-
-    } catch (e) {
-      status.innerText = "❌ Lỗi khi gọi API";
+    if (!json.data || !json.data[0]) {
+      status.innerText = "❌ Không tìm thấy asset";
+      return;
     }
+
+    const data = json.data[0];
+
+    if (data.state === "Pending") {
+      retry++;
+      if (retry >= MAX_RETRY) {
+        status.innerText = "⏰ Pending quá lâu";
+        return;
+      }
+      setTimeout(() => check(assetId), 2000);
+      return;
+    }
+
+    if (data.state !== "Completed" || !data.imageUrl) {
+      status.innerText = `❌ Asset không khả dụng (${data.state})`;
+      return;
+    }
+
+    img.src = data.imageUrl;
+    img.style.display = "block";
+    link.innerText = data.imageUrl;
+    status.innerText = "✅ Asset sẵn sàng";
   }
 }
 </script>
+
+</body>
+</html>
